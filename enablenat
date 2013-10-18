@@ -1,0 +1,44 @@
+#!/bin/bash
+nat_rules(){
+        local rc
+        rc=0
+        iptables -t nat -${OPTION} POSTROUTING -o $NET_EXT_IFACE -j MASQUERADE || rc=$?
+        for AUX_IFACE in $NET_INT_IFACE ; do
+                iptables -${OPTION} FORWARD -i $NET_EXT_IFACE -o $AUX_IFACE -m state --state RELATED,ESTABLISHED -j ACCEPT || rc=$?
+                iptables -${OPTION} FORWARD -i $AUX_IFACE -o $NET_EXT_IFACE -j ACCEPT || rc=$?
+        done
+        #return $rc
+}
+if [ "$#" -lt "2" ]; then
+	exit 0 
+fi
+if [ -z "$IFACE" ]; then
+	if [ -z "$3" ]; then
+		exit 0
+	fi
+	IFACE=$3
+fi
+OPTION=$1
+SCRIPT_TO_GET_INT_INTERFACES=$2
+NET_EXT_IFACE=$IFACE
+NET_INT_IFACE=$($SCRIPT_TO_GET_INT_INTERFACES)
+if [ -z "$NET_INT_IFACE" ]; then
+	exit 0
+fi
+#rc=$(iptables-save -t nat | grep -q "-A POSTROUTING -o $NET_EXT_IFACE -j MASQUERADE")
+case $OPTION in
+"D" )
+	if `iptables-save -t nat | grep "\-A POSTROUTING \-o $NET_EXT_IFACE \-j MASQUERADE" 1>/dev/null 2>&1` ; then  
+                nat_rules
+	fi
+
+	;;
+"A" )
+	if ! `iptables-save -t nat | grep "\-A POSTROUTING \-o $NET_EXT_IFACE \-j MASQUERADE" 1>/dev/null 2>&1` ; then 
+		nat_rules
+	fi
+	;;
+esac
+
+
+
