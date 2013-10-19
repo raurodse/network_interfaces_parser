@@ -76,3 +76,7 @@ for x in my_interface_file.interface_mapping['eth0']:
     if my_interface_file.content[x].__class__.__name__ == 'StanzaIface':
         my_interface_file.content[x].change_netmask('255.255.0.0')
 ```
+Finally you may write changes on file:
+```python
+my_interface_file.write_file('/etc/network/interfaces')
+```
