@@ -7,9 +7,9 @@ Examples of use
 ==============
 Firstly create object and l
 ```python
-import interfacesparser
+import netinterfaces
 ...
-my_interface_file = interfacesparser.InterfacesParser()
+my_interface_file = netinterfaces.InterfacesParser()
 ```
 
 Load file you want
@@ -36,9 +36,9 @@ Also you can get detail information or better structured by
 >>> my_interface_file.interface_mapping['eth0']
 [2, 3]
 >>> my_interface_file.content[2]
-<interfacesparser.StanzaAuto object at 0xa4045cc>
+<netinterfaces.StanzaAuto object at 0xa4045cc>
 >>> my_interface_file.content[3]
-<interfacesparser.StanzaIface object at 0xa4044ec>
+<netinterfaces.StanzaIface object at 0xa4044ec>
 >>> my_interface_file.content[3].options
 ['address 10.2.1.254', 'netmask 255.255.255.0']
 >>> my_interface_file.content[3].family
