@@ -1,6 +1,6 @@
 
 import os.path
-import exceptions
+#import exceptions
 
 
 class StanzaBasic(object):

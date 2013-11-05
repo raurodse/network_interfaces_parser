@@ -7,6 +7,6 @@ setup(  name = "python-netinterfaces",
         author  = "Raul Rodrigo Segura",
         author_email = "raurodse@gmail.com",
         license="GPL", 
-        package_dir = {'': 'src'},
-        packages = ['netinterfaces']
+        py_modules = ['netinterfaces'],
+        data_files = [('/usr/bin/',['enablenat'])]
      )
