@@ -387,7 +387,21 @@ class InterfacesParser:
 		if interface in self.interface_mapping:
 			for x in self.interface_mapping[interface]:
 				aux_return.append(self.content[x].print_stanza())
-		return aux_return	
+		return aux_return
+
+	def get_real_list_interfaces(self):
+		list_of_interfaces = []
+		if os.path.exists('/proc/net/dev'):
+			f = open('/proc/net/dev','r')
+			lines = f.readlines()
+			for x in lines[2:	]:
+				try: 
+					list_of_interfaces.append(x.split(':')[0].strip())
+				except:
+					pass
+		return list_of_interfaces
+
+
 	def get_list_interfaces(self):
 		return self.interface_mapping.keys()
 	
