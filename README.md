@@ -3,6 +3,17 @@ network_interfaces_parser
 
 With this library you can modify /etc/network/interfaces easily
 
+How to install
+============
+
+python setup.py install --record install_files.txt
+
+How to unistall
+=============
+
+while read line ; do rm -r $line ; done < install_files.txt
+
+
 Examples of use
 ==============
 Firstly create object and l
