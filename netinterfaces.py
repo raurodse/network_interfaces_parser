@@ -1,6 +1,4 @@
-
 import os.path
-#import exceptions
 
 
 class StanzaBasic(object):
@@ -287,8 +285,12 @@ class InterfacesParser:
 		for x in self.content:
 			output.write(x.print_stanza()+"\n")
 			#output.write(x+"\n")
+	def print_file(self):
+		result = ""
+		for x in self.content:
+			result += x.print_stanza()+"\n"
 	def __insert_interface_reference(self,interface,position):
-		if(not self.interface_mapping.has_key(interface)):
+		if(not interface in self.interface_mapping.keys()):
 			self.interface_mapping[interface] = []
 		self.interface_mapping[interface].append(position)	
 	def load(self,path,log_write_method='a'):
@@ -388,7 +390,6 @@ class InterfacesParser:
 			for x in self.interface_mapping[interface]:
 				aux_return.append(self.content[x].print_stanza())
 		return aux_return
-
 	def get_real_list_interfaces(self):
 		list_of_interfaces = []
 		if os.path.exists('/proc/net/dev'):
@@ -400,11 +401,8 @@ class InterfacesParser:
 				except:
 					pass
 		return list_of_interfaces
-
-
 	def get_list_interfaces(self):
-		return self.interface_mapping.keys()
-	
+		return self.interface_mapping.keys()	
 	def change_to_dhcp(self,interface):
 		for x in self.interface_mapping[interface]:
 			if (hasattr(self.content[x],'change_to_dhcp')):
