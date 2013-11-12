@@ -289,6 +289,7 @@ class InterfacesParser:
 		result = ""
 		for x in self.content:
 			result += x.print_stanza()+"\n"
+		return result
 	def __insert_interface_reference(self,interface,position):
 		if(not interface in self.interface_mapping.keys()):
 			self.interface_mapping[interface] = []
