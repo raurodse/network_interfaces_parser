@@ -415,8 +415,14 @@ class InterfacesParser:
 				netmask = options.pop('netmask')
 				list_options = []
 				for key in options.keys():
-					list_options.append(str(key) + " " + options.pop(key))
+					list_options.append(str(key) + " " + options[key])
 				self.content[x].change_to_static(address,netmask,list_options)
+	def update_dns(self,interface,dns):
+		for x in self.interface_mapping[interface]:
+			if (hasattr(self.content[x],'remove_option')):
+				self.content[x].remove_option('dns-nameservers',startswith=True)
+				for key in dns:
+					self.content[x].set_option('dns-nameservers ' + x)
 	def change_option_sysctl(self,file_path,needle,value):
 		if (os.path.exists(file_path)):
 			f = open(file_path,'r')
