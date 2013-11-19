@@ -26,10 +26,11 @@ class StanzaBasic(object):
 	#def append_interface
 	
 	def remove_interface(self,interface):
-		if interface in self.interface:
-			i = self.interface(interface)
-			return self.options.pop(i)
-		return None
+		try:
+			self.interfaces.remove(interface)
+			return interface
+		except:
+			return None
 	#def append_interface
 
 	def get_interfaces(self):
@@ -223,7 +224,7 @@ class StanzaIface(StanzaBasic):
 	def remove_option(self,option_string,startswith=False):
 		if (startswith):
 			return_list = []
-			for i in range(0,len(self.options)):
+			for i in range(len(self.options)-1,-1,-1):
 				if self.options[i].startswith(option_string):
 					return_list.append(self.options.pop(i))
 			return return_list
@@ -290,10 +291,10 @@ class InterfacesParser:
 		for x in self.content:
 			result += x.print_stanza()+"\n"
 		return result
-	def __insert_interface_reference(self,interface,position):
+	def __insert_interface_reference(self,interface,stanza):
 		if(not interface in self.interface_mapping.keys()):
 			self.interface_mapping[interface] = []
-		self.interface_mapping[interface].append(position)	
+		self.interface_mapping[interface].append(stanza)	
 	def load(self,path,log_write_method='a'):
 		if( not os.path.exists(path)):
 			raise Exception("Path " + str(path) + " not exists")
@@ -377,19 +378,19 @@ class InterfacesParser:
 						if ('has no attribute \'set_option\'' in e.message):
 							log_fh.write("File contain error with '" + " ".join(stanza_splited) + "' .This line is in invalid stanza." )
 							continue
-						
+		
 		if (aux_stanza != None):
 			self.content.append(aux_stanza)
 			
-		for i in range(0,len(self.content)):
-			if (hasattr(self.content[i],'get_interfaces')):
-				for aux_interface in self.content[i].get_interfaces():
-					self.__insert_interface_reference(aux_interface,i)			
+		for stanza in self.content:
+			if (hasattr(stanza,'get_interfaces')):
+				for aux_interface in stanza.get_interfaces():
+					self.__insert_interface_reference(aux_interface,stanza)	
 	def get_info_interface(self,interface):
 		aux_return = []
 		if interface in self.interface_mapping:
-			for x in self.interface_mapping[interface]:
-				aux_return.append(self.content[x].print_stanza())
+			for stanza in self.interface_mapping[interface]:
+				aux_return.append(stanza.print_stanza())
 		return aux_return
 	def get_real_list_interfaces(self):
 		list_of_interfaces = []
@@ -405,24 +406,25 @@ class InterfacesParser:
 	def get_list_interfaces(self):
 		return self.interface_mapping.keys()	
 	def change_to_dhcp(self,interface):
-		for x in self.interface_mapping[interface]:
-			if (hasattr(self.content[x],'change_to_dhcp')):
-				self.content[x].change_to_dhcp()	
+		for stanza in self.interface_mapping[interface]:
+			if (hasattr(stanza,'change_to_dhcp')):
+				stanza.change_to_dhcp()	
 	def change_to_static(self,interface,options):
-		for x in self.interface_mapping[interface]:
-			if (hasattr(self.content[x],'change_to_static')):
+		for stanza in self.interface_mapping[interface]:
+			if (hasattr(stanza,'change_to_static')):
 				address = options.pop('address')
 				netmask = options.pop('netmask')
 				list_options = []
 				for key in options.keys():
 					list_options.append(str(key) + " " + options[key])
-				self.content[x].change_to_static(address,netmask,list_options)
+				stanza.change_to_static(address,netmask,list_options)
 	def update_dns(self,interface,dns):
-		for x in self.interface_mapping[interface]:
-			if (hasattr(self.content[x],'remove_option')):
-				self.content[x].remove_option('dns-nameservers',startswith=True)
+		for stanza in self.interface_mapping[interface]:
+			if (hasattr(stanza,'remove_option')):
+				stanza.remove_option('dns-nameservers',startswith=True)
 				for key in dns:
-					self.content[x].set_option('dns-nameservers ' + x)
+					if key.strip() != "" :
+						stanza.set_option('dns-nameservers ' + key)
 	def change_option_sysctl(self,file_path,needle,value):
 		if (os.path.exists(file_path)):
 			f = open(file_path,'r')
@@ -498,9 +500,9 @@ class InterfacesParser:
 			raise Exception("interfaces must be list")
 		for x in interfaces_list:
 			if ( x in self.interface_mapping.keys()):
-				for i in self.interface_mapping[x]:
-					if(self.content[i].__class__.__name__ == 'StanzaIface'):
-						self.content[i].set_option('up enablenat A ' + internal_interfaces_script,unique=True)
+				for stanza in self.interface_mapping[x]:
+					if(stanza.__class__.__name__ == 'StanzaIface'):
+						stanza.set_option('up enablenat A ' + internal_interfaces_script,unique=True)
 			else:
 				raise Exception("Interface " + x  + " is not defined on " + self.path)
 	def disable_nat(self, interfaces_list):
@@ -508,9 +510,9 @@ class InterfacesParser:
 			raise Exception("interfaces must be list")
 		for x in interfaces_list:
 			if ( x in self.interface_mapping.keys()):
-				for i in self.interface_mapping[x]:
-					if(self.content[i].__class__.__name__ == 'StanzaIface'):
-						self.content[i].remove_option('up enablenat',startswith=True)
+				for stanza in self.interface_mapping[x]:
+					if(stanza.__class__.__name__ == 'StanzaIface'):
+						stanza.remove_option('up enablenat',startswith=True)
 			else:
 				raise Exception("Interface " + x  + " is not defined on " + self.path)
 	def insert_stanza(self, stanza):
@@ -518,13 +520,13 @@ class InterfacesParser:
 			self.content.append(stanza)
 			if (hasattr(stanza,'get_interfaces')):
 				for aux_interface in stanza.get_interfaces():
-					self.__insert_interface_reference(aux_interface,len(self.content)-1)
+					self.__insert_interface_reference(aux_interface,stanza)
 		else:
 			raise Exception("Stanza not supported")
 	def get_nat_persistent(self,interface):
-		for i in self.interface_mapping[str(interface)]:
-			if(self.content[i].__class__.__name__ == 'StanzaIface'):
-				for x in self.content[i].options:
+		for stanza in self.interface_mapping[str(interface)]:
+			if(stanza.__class__.__name__ == 'StanzaIface'):
+				for x in stanza.options:
 					if 'up enablenat' in x:
 						return True
 		return False
@@ -547,3 +549,44 @@ class InterfacesParser:
 					return bool(int(x.split('=')[1]))
 				except Exception:
 					return False
+
+	def delete_all_interface(self,interface):
+		try:
+			self.__delete_stanza(interface,StanzaBasic)
+			return True
+		except:
+			return False
+	def auto_toggle(self,interface,status):
+		if status:
+			if interface in self.interface_mapping:
+				for stanza in self.interface_mapping[interface]:
+					if isinstance(stanza,StanzaAuto):
+						return True
+			aux_stanza = StanzaAuto([interface])
+			self.insert_stanza(aux_stanza)
+		else:
+			self.delete_auto(interface)
+			return True
+
+	def delete_auto(self,interface):
+		try:
+			self.__delete_stanza(interface,StanzaAuto)
+			return True
+		except:
+			return False
+
+	def __delete_stanza(self,interface,objectclass):
+		if interface in self.interface_mapping.keys():
+			for index in range(len(self.interface_mapping[interface]) -1 , -1 , -1):
+				stanza = self.interface_mapping[interface][index]
+				if isinstance(stanza,objectclass):
+					self.__delete_interface(interface,stanza)
+			if len(self.interface_mapping[interface]) <= 0:
+				self.interface_mapping.pop(interface)
+
+	def __delete_interface(self,interface,stanza):
+		stanza.remove_interface(interface)
+		self.interface_mapping[interface].remove(stanza)
+		if len(stanza.get_interfaces()) <= 0 :
+			self.content.remove(stanza)
+		
