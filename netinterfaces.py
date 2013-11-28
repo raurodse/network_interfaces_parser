@@ -8,7 +8,7 @@ class StanzaBasic(object):
 		'''
 		self.type = ''
 		self.interfaces = []
-		if(type(list_interfaces) == type([])):
+		if not isinstance(interfaces_list,list):
 			for i in list_interfaces:
 				self.interfaces.append(i)
 		else:
@@ -77,7 +77,7 @@ class StanzaMapping(StanzaBasic):
 	#def get_all_options
 	
 	def set_option(self,option_string):
-		if (type(option_string) != type('')):
+		if not isinstance(option_string,str):
 			raise Exception('Option must be string')
 		strip_option = option_string.strip()
 		if (strip_option.lower().startswith('script')):
@@ -211,7 +211,7 @@ class StanzaIface(StanzaBasic):
 	#def change_to_static
 	
 	def set_option(self,option_string,unique=False):
-		if (type(option_string) != type('')):
+		if not isinstance(option_string,str):
 			raise Exception('Option must be string')
 		strip_option = option_string.strip()
 		if unique:
@@ -496,7 +496,7 @@ class InterfacesParser:
 		else:
 			return True	
 	def enable_nat(self,interfaces_list,internal_interfaces_script):
-		if (type(interfaces_list) != type([])):
+		if not isinstance(interfaces_list,list):
 			raise Exception("interfaces must be list")
 		for x in interfaces_list:
 			if ( x in self.interface_mapping.keys()):
@@ -506,7 +506,7 @@ class InterfacesParser:
 			else:
 				raise Exception("Interface " + x  + " is not defined on " + self.path)
 	def disable_nat(self, interfaces_list):
-		if (type(interfaces_list) != type([])):
+		if not isinstance(interfaces_list,list):
 			raise Exception("interfaces must be list")
 		for x in interfaces_list:
 			if ( x in self.interface_mapping.keys()):
