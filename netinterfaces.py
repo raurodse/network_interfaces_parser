@@ -8,7 +8,7 @@ class StanzaBasic(object):
 		'''
 		self.type = ''
 		self.interfaces = []
-		if not isinstance(interfaces_list,list):
+		if isinstance(list_interfaces,list):
 			for i in list_interfaces:
 				self.interfaces.append(i)
 		else:
