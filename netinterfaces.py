@@ -242,6 +242,16 @@ class StanzaIface(StanzaBasic):
 		return "iface " + " ".join(self.interfaces) + " " + self.family + " " + self.method + aux_options
 	#def print_stanza
 
+	def check_option(self,option,contain=False):
+		if option in self.options:
+			return True
+		if contain:
+			for aux_option in self.options:
+				if aux_option.startswith(option):
+					return True
+		return False
+
+
 	def change_ip(self,ip):
 		if self.method != 'static' :
 			raise Exception("This interface isn't on static configuration")
