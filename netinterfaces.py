@@ -331,7 +331,7 @@ class InterfacesParser:
 				aux_lines[-1] = aux_lines[-1] + " " + striped_line
 
 			if (striped_line.endswith('\\')):
-				if (not striped_line.startswith('#')):
+				if (not striped_line.startswith('#') or striped_line.startswith('//')):
 					multiline = True
 					aux_lines[-1] = aux_lines[-1][:-1]
 				else:
@@ -341,7 +341,7 @@ class InterfacesParser:
 			line = input_file.readline()
 		aux_stanza = None
 		for x in aux_lines:
-			if (x.startswith('#')):
+			if (x.startswith('#') or x.startswith('//')):
 				if (aux_stanza != None):
 					self.content.append(aux_stanza)
 					aux_stanza = None
