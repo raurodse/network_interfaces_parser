@@ -2,30 +2,28 @@ import os.path
 
 
 class StanzaBasic(object):
-	def __init__(self,list_interfaces):
+	def __init__(self, list_interfaces):
 		'''
 			list_interfaces is list
 		'''
 		self.type = ''
 		self.interfaces = []
-		if isinstance(list_interfaces,list):
+		if isinstance(list_interfaces, list):
 			for i in list_interfaces:
 				self.interfaces.append(i)
 		else:
 			raise Exception("list_interfaces may be list")
 	#def __init__
 	
-	def append_interface(self,interface,order=-1):	
+	def append_interface(self, interface, order=-1):	
 		if(order < 0):
 			self.interfaces.append(interface)
 		else:
-			aux_interface_list = self.interfaces[:order] + [interface]+ self.interfaces[order:]
-			self.interfaces = aux_interface_list
-		
+			self.interfaces.insert(order, interface)
 		return interface
 	#def append_interface
 	
-	def remove_interface(self,interface):
+	def remove_interface(self, interface):
 		try:
 			self.interfaces.remove(interface)
 			return interface
@@ -37,8 +35,9 @@ class StanzaBasic(object):
 		return self.interfaces
 	#def get_interfaces
 
+
 class StanzaAuto(StanzaBasic):
-	def __init__(self,list_interfaces):
+	def __init__(self, list_interfaces):
 		'''
 			list_interfaces is list
 		'''
@@ -50,14 +49,15 @@ class StanzaAuto(StanzaBasic):
 		return "auto " + " ".join(self.interfaces)
 	#def print_stanza
 
+
 class StanzaMapping(StanzaBasic):
-	def __init__(self,list_interfaces):
+	def __init__(self, list_interfaces):
 		'''
 			list_interfaces is list
 		'''
 		super(StanzaMapping,self).__init__(list_interfaces)
 		self.type = 'mapping'
-		self.script = {'path':'','order':0}
+		self.script = { 'path':'', 'order':0 }
 		self.options = []
 	#def __init__
 	
@@ -76,8 +76,8 @@ class StanzaMapping(StanzaBasic):
 			return self.options[:self.script['order']] + ['script ' + self.script['path']] + self.options[self.script['order']:]
 	#def get_all_options
 	
-	def set_option(self,option_string):
-		if not isinstance(option_string,str):
+	def set_option(self, option_string):
+		if not isinstance(option_string, str):
 			raise Exception('Option must be string')
 		strip_option = option_string.strip()
 		if (strip_option.lower().startswith('script')):
@@ -88,11 +88,11 @@ class StanzaMapping(StanzaBasic):
 		return True
 	#def set_option
 
-	def remove_option(self,option_string):
+	def remove_option(self, option_string):
 		if option_string in self.options:
 			i = self.options.index(option_string)
-			if ( self.script['order'] > i ):
-				self.script['order'] -= 1;
+			if self.script['order'] > i:
+				self.script['order'] -= 1
 			return self.options.pop(i)
 		else:
 			return None
@@ -105,8 +105,9 @@ class StanzaMapping(StanzaBasic):
 		return "mapping " + " ".join(self.interfaces) + aux_options
 	#def print_stanza
 
+
 class StanzaSource:
-	def __init__(self,path):
+	def __init__(self, path):
 		self.type = 'source'
 		self.path = ''
 		if(type(path) == type('')):
@@ -127,8 +128,9 @@ class StanzaSource:
 		return "source " + self.path
 	#def print_stanza
 
+
 class StanzaAllow(StanzaBasic):
-	def __init__(self,allow,list_interfaces):
+	def __init__(self,allow, list_interfaces):
 		'''
 			list_interfaces is list
 		'''
@@ -143,7 +145,7 @@ class StanzaAllow(StanzaBasic):
 
 class StanzaIface(StanzaBasic):
 	
-	def __init__(self,list_interfaces,options):
+	def __init__(self, list_interfaces, options):
 		'''
 			list_interfaces is list
 		'''
@@ -157,6 +159,7 @@ class StanzaIface(StanzaBasic):
 			'ipx':['static','dynamic']}
 		self.family = ''
 		self.method = ''
+
 		aux = options.split(" ")
 		if (len(aux) == 2 ):
 			self.family = aux[0]
@@ -170,12 +173,13 @@ class StanzaIface(StanzaBasic):
 					if (aux in self.__list_family[x]):
 						self.family = x
 						self.method = aux
+						break
 					else:
 						raise Exception("Method not supported")
 	#def __init__
 
 	def change_to_dhcp(self):
-		if (self.family == 'can' or self.family == 'ipx'):
+		if 'dhcp' not in self.__list_family[self.family] :
 			raise Exception("Family no support dhcp method")
 		self.method = 'dhcp'
 		not_removed_options = []
@@ -189,14 +193,11 @@ class StanzaIface(StanzaBasic):
 		return True
 	#def change_to_dhcp
 
-	def change_to_static(self,address,netmask,aux_options=[]):
-		if (self.family == 'can' or self.family == 'ipx'):
+	def change_to_static(self, address, netmask, aux_options=[]):
+		if 'static' not in self.__list_family[self.family]:
 			raise Exception("Now not support change to static method for family " + self.family)
 		self.method = 'static'
-		not_removed_options = []
-		not_removed_options.append('address ' + address)
-		not_removed_options.append('netmask ' + netmask)
-		not_removed_options = not_removed_options + aux_options
+		not_removed_options = ['address ' + address, 'netmask ' + netmask ] + aux_options
 		list_new_options = []
 		for x in not_removed_options:
 			list_new_options.append(x.split(' ')[0].lower())
@@ -210,8 +211,8 @@ class StanzaIface(StanzaBasic):
 		return True
 	#def change_to_static
 	
-	def set_option(self,option_string,unique=False):
-		if not isinstance(option_string,str):
+	def set_option(self, option_string, unique=False):
+		if not isinstance(option_string, str):
 			raise Exception('Option must be string')
 		strip_option = option_string.strip()
 		if unique:
@@ -221,10 +222,10 @@ class StanzaIface(StanzaBasic):
 		return True
 	#def set_option
 	
-	def remove_option(self,option_string,startswith=False):
+	def remove_option(self, option_string, startswith=False):
 		if (startswith):
 			return_list = []
-			for i in range(len(self.options)-1,-1,-1):
+			for i in range(len(self.options) -1, -1, -1):
 				if self.options[i].startswith(option_string):
 					return_list.append(self.options.pop(i))
 			return return_list
@@ -242,7 +243,7 @@ class StanzaIface(StanzaBasic):
 		return "iface " + " ".join(self.interfaces) + " " + self.family + " " + self.method + aux_options
 	#def print_stanza
 
-	def check_option(self,option,contain=False):
+	def check_option(self, option, contain=False):
 		if option in self.options:
 			return True
 		if contain:
@@ -252,7 +253,7 @@ class StanzaIface(StanzaBasic):
 		return False
 
 
-	def change_ip(self,ip):
+	def change_ip(self, ip):
 		if self.method != 'static' :
 			raise Exception("This interface isn't on static configuration")
 		for x in range(0,len(self.options)):
@@ -285,27 +286,30 @@ class StanzaComment:
 		return self.comment
 
 class InterfacesParser:
-	def __init__(self,logfile='/tmp/InterfacesParser'):
+	def __init__(self, logfile='/tmp/InterfacesParser'):
 		self.content = []
 		self.stanza_supported = ['iface','allow','auto','source','mapping']
 		self.interface_mapping = {}
 		self.log_path = logfile
-		self.path = ""		
-	def write_file(self,path):
-		output = open(path,'w')
-		for x in self.content:
-			output.write(x.print_stanza()+"\n")
-			#output.write(x+"\n")
+		self.path = ""
+
+	def write_file(self, path):
+		output = open(path, 'w')
+		output.write(self.print_file)
+		output.close()
+
 	def print_file(self):
 		result = ""
 		for x in self.content:
 			result += x.print_stanza()+"\n"
 		return result
-	def __insert_interface_reference(self,interface,stanza):
-		if(not interface in self.interface_mapping.keys()):
+
+	def __insert_interface_reference(self, interface, stanza):
+		if not interface in self.interface_mapping.keys():
 			self.interface_mapping[interface] = []
-		self.interface_mapping[interface].append(stanza)	
-	def load(self,path,log_write_method='a'):
+		self.interface_mapping[interface].append(stanza)
+		
+	def load(self, path, log_write_method='a'):
 		if( not os.path.exists(path)):
 			raise Exception("Path " + str(path) + " not exists")
 		'''
@@ -395,13 +399,16 @@ class InterfacesParser:
 		for stanza in self.content:
 			if (hasattr(stanza,'get_interfaces')):
 				for aux_interface in stanza.get_interfaces():
-					self.__insert_interface_reference(aux_interface,stanza)	
+					self.__insert_interface_reference(aux_interface,stanza)
+		
+
 	def get_info_interface(self,interface):
 		aux_return = []
 		if interface in self.interface_mapping:
 			for stanza in self.interface_mapping[interface]:
 				aux_return.append(stanza.print_stanza())
 		return aux_return
+
 	def get_real_list_interfaces(self):
 		list_of_interfaces = []
 		if os.path.exists('/proc/net/dev'):
@@ -413,12 +420,15 @@ class InterfacesParser:
 				except:
 					pass
 		return list_of_interfaces
+
 	def get_list_interfaces(self):
-		return self.interface_mapping.keys()	
+		return self.interface_mapping.keys()
+
 	def change_to_dhcp(self,interface):
 		for stanza in self.interface_mapping[interface]:
 			if (hasattr(stanza,'change_to_dhcp')):
 				stanza.change_to_dhcp()	
+
 	def change_to_static(self,interface,options):
 		for stanza in self.interface_mapping[interface]:
 			if (hasattr(stanza,'change_to_static')):
@@ -428,6 +438,7 @@ class InterfacesParser:
 				for key in options.keys():
 					list_options.append(str(key) + " " + options[key])
 				stanza.change_to_static(address,netmask,list_options)
+	
 	def update_dns(self,interface,dns):
 		for stanza in self.interface_mapping[interface]:
 			if (hasattr(stanza,'remove_option')):
@@ -435,6 +446,7 @@ class InterfacesParser:
 				for key in dns:
 					if key.strip() != "" :
 						stanza.set_option('dns-nameservers ' + key)
+
 	def change_option_sysctl(self,file_path,needle,value):
 		if (os.path.exists(file_path)):
 			f = open(file_path,'r')
@@ -452,31 +464,36 @@ class InterfacesParser:
 			f.write(x)
 		if (not found):
 			f.write(value+"\n")
-		f.close()	
+		f.close()
+
 	def enable_forwarding_ipv4(self,persistent=False):
 		if (persistent):
 			self.change_option_sysctl('/etc/sysctl.d/network-parser-forwarding.conf','net.ipv4.ip_forward','net.ipv4.ip_forward=1')
 		f = open('/proc/sys/net/ipv4/ip_forward','w')
 		f.write('1')
-		f.close()	
+		f.close()
+
 	def disable_forwarding_ipv4(self,persistent=False):
 		if (persistent):
 			self.change_option_sysctl('/etc/sysctl.d/network-parser-forwarding.conf','net.ipv4.ip_forward','net.ipv4.ip_forward=0')
 		f = open('/proc/sys/net/ipv4/ip_forward','w')
 		f.write('0')
 		f.close()
+
 	def enable_forwarding_ipv6(self,persistent=False):
 		if (persistent):
 			self.change_option_sysctl('/etc/sysctl.d/network-parser-forwarding.conf','net.ipv6.conf.all.forwarding','net.ipv6.conf.all.forwarding=1')
 		f = open('/proc/sys/net/ipv6/conf/all/forwarding','w')
 		f.write('1')
 		f.close()
+
 	def disable_forwarding_ipv6(self,persistent=False):
 		if (persistent):
 			self.change_option_sysctl('/etc/sysctl.d/network-parser-forwarding.conf','net.ipv6.conf.all.forwarding','net.ipv6.conf.all.forwarding=0')
 		f = open('/proc/sys/net/ipv6/conf/all/forwarding','w')
 		f.write('0')
 		f.close()
+
 	def is_enable_forwarding_ipv4(self):
 		try:
 			f = open('/proc/sys/net/ipv4/ip_forward')
@@ -491,6 +508,7 @@ class InterfacesParser:
 			return False
 		else:
 			return True
+
 	def is_enable_forwarding_ipv6(self):
 		try:
 			f = open('/proc/sys/net/ipv6/conf/all/forwarding')
@@ -504,17 +522,19 @@ class InterfacesParser:
 		if (result == '0'):
 			return False
 		else:
-			return True	
+			return True
+
 	def enable_nat(self,interfaces_list,internal_interfaces_script):
 		if not isinstance(interfaces_list,list):
 			raise Exception("interfaces must be list")
 		for x in interfaces_list:
-			if ( x in self.interface_mapping.keys()):
+			if x in self.interface_mapping.keys():
 				for stanza in self.interface_mapping[x]:
 					if(stanza.__class__.__name__ == 'StanzaIface'):
 						stanza.set_option('up enablenat A ' + internal_interfaces_script,unique=True)
 			else:
 				raise Exception("Interface " + x  + " is not defined on " + self.path)
+
 	def disable_nat(self, interfaces_list):
 		if not isinstance(interfaces_list,list):
 			raise Exception("interfaces must be list")
@@ -525,6 +545,7 @@ class InterfacesParser:
 						stanza.remove_option('up enablenat',startswith=True)
 			else:
 				raise Exception("Interface " + x  + " is not defined on " + self.path)
+
 	def insert_stanza(self, stanza):
 		if stanza.__class__.__name__ in ['StanzaIface','StanzaAuto','StanzaComment','StanzaMapping','StanzaSource']:
 			self.content.append(stanza)
@@ -533,6 +554,7 @@ class InterfacesParser:
 					self.__insert_interface_reference(aux_interface,stanza)
 		else:
 			raise Exception("Stanza not supported")
+
 	def get_nat_persistent(self,interface):
 		for stanza in self.interface_mapping[str(interface)]:
 			if(stanza.__class__.__name__ == 'StanzaIface'):
@@ -540,6 +562,7 @@ class InterfacesParser:
 					if 'up enablenat' in x:
 						return True
 		return False
+
 	def get_routing_persistent(self, type):
 		if str(type) == 'ipv4':
 			needle = 'net.ipv4.ip_forward'
@@ -566,6 +589,7 @@ class InterfacesParser:
 			return True
 		except:
 			return False
+		
 	def auto_toggle(self,interface,status):
 		if status:
 			if interface in self.interface_mapping:
