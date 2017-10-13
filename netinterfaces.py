@@ -295,7 +295,7 @@ class InterfacesParser:
 
 	def write_file(self, path):
 		output = open(path, 'w')
-		output.write(self.print_file)
+		output.write(self.print_file())
 		output.close()
 
 	def print_file(self):
